@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "manifest_version": 3,
-  "version": "0.1.5",
+  "version": "0.1.5.1",
   "name": "edu-exp",
   "description": "A baidu edu tools",
   "author": "pingfury@outlook.com",

@@ -522,9 +522,11 @@ export default function Main() {
               {features.topic_split && (
                 <a className={`tab ${activeTab === 'topic_split' ? 'tab-active' : ''}`} onClick={() => handleTabChange('topic_split')}>题目切割</a>
               )}
+              {/*
               {features["clue-claiming"] && (
                 <a className={`tab ${activeTab === 'clue-claiming' ? 'tab-active' : ''}`} onClick={() => handleTabChange('clue-claiming')}>线索认领</a>
               )}
+              */}
               </div>
             </div>
             {activeTab === 'settings' && (
