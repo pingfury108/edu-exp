@@ -16,4 +16,5 @@
 
 - [常见问题](./faq.md)
 - [联系方式](./contact.md)
+- [续费系统](./renewal.md)
 - [买断版本(扣子版本API)](./coze.md)

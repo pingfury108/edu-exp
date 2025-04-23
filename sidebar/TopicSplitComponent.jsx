@@ -52,11 +52,18 @@ const TopicSplitComponent = ({ host, uname, serverType }) => {
   // Initialize CozeService when serverType is "扣子"
   React.useEffect(() => {
     if (serverType === "扣子") {
-      chrome.storage.sync.get(['kouziAccessKey', 'kouziTopicSplitWorkflowId'], (result) => {
-        if (result.kouziAccessKey && result.kouziTopicSplitWorkflowId) {
+      chrome.storage.sync.get(['kouziAccessKey', 'kouziQuestionSplitWorkflowId'], (result) => {
+        console.log('TopicSplitComponent: Attempting to init CozeService with keys:', result); // Add log
+        if (result.kouziAccessKey && result.kouziQuestionSplitWorkflowId) {
+          console.log('TopicSplitComponent: Initializing CozeService.');
           setCozeService(new CozeService(result.kouziAccessKey));
+        } else {
+          console.error('TopicSplitComponent: Missing required Kouzi configuration (kouziAccessKey or kouziQuestionSplitWorkflowId)');
+          setCozeService(null); // Ensure service is null if keys are missing
         }
       });
+    } else {
+      setCozeService(null); // Reset service if not Kouzi type
     }
   }, [serverType]);
   
@@ -251,16 +258,22 @@ const TopicSplitComponent = ({ host, uname, serverType }) => {
           const blob = new Blob(byteArrays, { type: 'image/jpeg' });
           const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
 
-          // Get workflow ID from storage
+          // Get Topic Split specific workflow ID and App ID from storage
           const result = await new Promise((resolve) => {
-            chrome.storage.sync.get(['kouziTopicSplitWorkflowId', 'kouziAppId'], resolve);
+            // NOTE: Assuming kouziAppId is needed, like in Sidebar.jsx. If not, remove it.
+            // IMPORTANT: Verify that kouziAppId is actually stored and intended for use here.
+            // If only workflowId is needed, adjust the get call and executeWorkflow call.
+            chrome.storage.sync.get(['kouziQuestionSplitWorkflowId', 'kouziAppId'], resolve); // Fetch the correct workflow ID
           });
+
+          // Check if required IDs were fetched
+          if (!result.kouziQuestionSplitWorkflowId || !result.kouziAppId) { // Adjust check if kouziAppId is not needed
+            throw new Error("扣子题目切割 Workflow ID 或 App ID 未配置");
+          }
 
           // Upload file and execute workflow
           const uploadResult = await cozeService.uploadFile(file);
-          console.log(uploadResult);
-
-          const workflowResult = await cozeService.executeWorkflow(result.kouziTopicSplitWorkflowId, {
+          const workflowResult = await cozeService.executeWorkflow(result.kouziQuestionSplitWorkflowId, {
             app_id: result.kouziAppId,
             parameters: {
               img: {
@@ -295,7 +308,13 @@ const TopicSplitComponent = ({ host, uname, serverType }) => {
             setSplitResult('切割失败：未获取到切割结果');
           }
         } else {
-          // 使用 chrome.runtime.sendMessage 发送请求到 background.js
+           // Explicitly check if Kouzi was intended but failed initialization
+           if (serverType === "扣子") { // No need to check !cozeService here, as the previous check already covers it
+               console.error("Kouzi server type selected, but Coze service not initialized. Check settings for kouziAccessKey and kouziQuestionSplitWorkflowId.");
+               throw new Error("扣子服务配置不完整，请检查设置。"); // Prevent fallback
+           }
+
+          // Official server logic (using chrome.runtime.sendMessage)
           try {
             // 发送消息到 background.js
             const result = await new Promise((resolve, reject) => {

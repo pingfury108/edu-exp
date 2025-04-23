@@ -167,7 +167,19 @@ export function replacePunctuation(text) {
 
   result = result.replace(/\(\)/g, '（ ）');
   result = result.replace(/（）/g, '（ ）');
-  result = result.replace(/\((\d)\)(?![\d+\-*/])/g, '（$1）');
+  // 处理单个字符的情况，包括字母，排除括号内有运算符的情况
+  result = result.replace(/\(([0-9a-zA-Z\u4e00-\u9fa5])\)(?![0-9])(?![+\-*/])/g, '（$1）');
+  // 处理多个字符的情况，包括字母
+  result = result.replace(/\(([\u4e00-\u9fa5a-zA-Z]+)\)/g, '（$1）');
+  // 处理括号内数字和中文混合的情况，如(3分)
+  result = result.replace(/\((\d+[\u4e00-\u9fa5]+)\)/g, '（$1）');
+  result = result.replace(/\(([\u4e00-\u9fa5]+\d+)\)/g, '（$1）');
+  result = result.replace(/\((\d+[\u4e00-\u9fa5]+\d+)\)/g, '（$1）');
+  // 处理字符前后带括号的情况，排除括号内有运算符的情况
+  result = result.replace(/([\u4e00-\u9fa5a-zA-Z]+)\(([^+\-*/]+?)\)/g, '$1（$2）');
+  // 处理序号格式，即使后面跟着数字也会替换
+  result = result.replace(/\((\d+)\)(?=\d)(?![+\-*/])/g, '（$1）');
+  result = result.replace(/([^+\-*/]):/g, '$1：');
   result = result.replace(/(?<=[\u4e00-\u9fa5])\:(?=[\u4e00-\u9fa5])/g, '：');
   result = result.replace(/(?<=[)）])\:/g, '：');
 
